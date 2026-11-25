@@ -224,12 +224,13 @@ try { applyTheme(localStorage.getItem('theme') || 'Default'); } catch (e) { appl
     };
   };
   const still = matchMedia('(prefers-reduced-motion: reduce)');
+  /* how far the wind has pushed a stem's tip at time T (seconds); a redraw uses it too, so it never snaps upright */
+  const windDx = (g, T) => still.matches ? 0 : g.L * .075 * (Math.sin(g.w * T + g.o) + .3 * Math.sin(2.3 * g.w * T + g.o2));
   const breeze = now => {
     const T = now / 1000;
     if (!still.matches) for (const g of geo) {
       if (!g.sl) continue;
-      const dx = g.L * .075 * (Math.sin(g.w * T + g.o) + .3 * Math.sin(2.3 * g.w * T + g.o2));
-      const st = stemAt(g, dx);
+      const st = stemAt(g, windDx(g, T));
       g.sl.setAttribute('d', st.d); g.lf.setAttribute('transform', st.leaf); g.hd.setAttribute('transform', st.head);
     }
     requestAnimationFrame(breeze);
@@ -268,7 +269,7 @@ try { applyTheme(localStorage.getItem('theme') || 'Default'); } catch (e) { appl
       const g = {x, top, ground, bend, lt: (ground - ly) / (ground - top), L: ground - top,
                  w: 2 * Math.PI / (3.8 + (i * .61) % 1.8), o: i * 1.37, o2: i * 2.11};
       geo.push(g);
-      const st = stemAt(g, 0);
+      const st = stemAt(g, windDx(g, performance.now() / 1000));
       return `<a class="fl${cls}" data-host="${row.dataset.host}" href="https://${row.dataset.host}.flowerboi.se" style="--i:${i}"><title>${name}</title><g class="lift">
         <g class="stem"><path class="sl" d="${st.d}" fill="none" stroke="var(--stem)" stroke-width="${sw.toFixed(2)}" stroke-linecap="round"/>
         <path class="lf" d="M0 0 q${side*r*.9} ${-r*.2} ${side*r*1.3} ${-r*.9} q${-side*r*.8} ${-r*.05} ${-side*r*1.3} ${r*.9}Z" transform="${st.leaf}" fill="var(--leaf)"/></g>
