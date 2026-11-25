@@ -172,8 +172,8 @@ try { applyTheme(localStorage.getItem('theme') || 'Default'); } catch (e) { appl
     <section>
       <h2>Hosted</h2>
       <ul class="list" id="hosted">
-        <li class="row" data-host="cbn" data-repo="cbn-guide"><a class="name" href="https://cbn.flowerboi.se">Bright Nights guide</a><span class="right"><a class="host" href="https://cbn.flowerboi.se">cbn.flowerboi.se</a><span class="st">…</span></span><span class="desc">Item and crafting wiki for Cataclysm: Bright Nights.</span></li>
-        <li class="row" data-host="cdda" data-repo="cdda-guide"><a class="name" href="https://cdda.flowerboi.se">Dark Days Ahead guide</a><span class="right"><a class="host" href="https://cdda.flowerboi.se">cdda.flowerboi.se</a><span class="st">…</span></span><span class="desc">Item and crafting wiki for Cataclysm: Dark Days Ahead.</span></li>
+        <li class="row" data-host="cbn" data-repo="cbn-guide" data-root="cataclysm"><a class="name" href="https://cbn.flowerboi.se">Bright Nights guide</a><span class="right"><a class="host" href="https://cbn.flowerboi.se">cbn.flowerboi.se</a><span class="st">…</span></span><span class="desc">Item and crafting wiki for Cataclysm: Bright Nights.</span></li>
+        <li class="row" data-host="cdda" data-repo="cdda-guide" data-root="cataclysm"><a class="name" href="https://cdda.flowerboi.se">Dark Days Ahead guide</a><span class="right"><a class="host" href="https://cdda.flowerboi.se">cdda.flowerboi.se</a><span class="st">…</span></span><span class="desc">Item and crafting wiki for Cataclysm: Dark Days Ahead.</span></li>
         <li class="row" data-host="jellyfin"><a class="name" href="https://jellyfin.flowerboi.se">Jellyfin</a><span class="right"><a class="host" href="https://jellyfin.flowerboi.se">jellyfin.flowerboi.se</a><span class="st">…</span></span><span class="desc">Media server.</span></li>
       </ul>
     </section>
@@ -217,18 +217,24 @@ try { applyTheme(localStorage.getItem('theme') || 'Default'); } catch (e) { appl
      stem keeps its length) and the control point less, so the stem bends rather than pivots */
   let geo = [];
   const deg = (dx, dy) => Math.atan2(dx, -dy) * 180 / Math.PI;
-  const stemAt = (g, dx) => {
+  /* g.x is where the stem leaves the ground and g.tx where its head sits at rest; they differ only for plants
+     that share a root, whose stems rise together and then part */
+  const shape = (g, dx) => {
     const dy = dx * dx / (2 * g.L);
-    const P1x = g.x + g.bend + dx * .35, P1y = (g.ground + g.top) / 2;
-    const P2x = g.x + dx, P2y = g.top + dy;
+    const P1x = g.x + g.bend + (g.tx - g.x) * .1 + dx * .35, P1y = (g.ground + g.top) / 2;
+    const P2x = g.tx + dx, P2y = g.top + dy;
     const t = g.lt, u = 1 - t;
-    const lx = u*u*g.x + 2*u*t*P1x + t*t*P2x, ly = u*u*g.ground + 2*u*t*P1y + t*t*P2y;
-    const tan = (a, b) => deg(2*u*(P1x - g.x) + 2*t*(P2x - P1x), 2*u*(P1y - g.ground) + 2*t*(P2y - P1y));
-    const rest = g.rest || (g.rest = {leaf: deg(2*u*g.bend - 2*t*g.bend, (g.top - g.ground)), head: deg(-g.bend, (g.top - g.ground) / 2)});
+    return {P1x, P1y, P2x, P2y,
+      lx: u*u*g.x + 2*u*t*P1x + t*t*P2x, ly: u*u*g.ground + 2*u*t*P1y + t*t*P2y,
+      leaf: deg(2*u*(P1x - g.x) + 2*t*(P2x - P1x), 2*u*(P1y - g.ground) + 2*t*(P2y - P1y)),
+      head: deg(P2x - P1x, P2y - P1y)};
+  };
+  const stemAt = (g, dx) => {
+    const k = shape(g, dx), rest = g.rest || (g.rest = shape(g, 0));
     return {
-      d: `M${g.x} ${g.ground} Q${P1x.toFixed(2)} ${P1y} ${P2x.toFixed(2)} ${P2y.toFixed(2)}`,
-      leaf: `translate(${lx.toFixed(2)} ${ly.toFixed(2)}) rotate(${(tan() - rest.leaf).toFixed(2)})`,
-      head: `translate(${P2x.toFixed(2)} ${P2y.toFixed(2)}) rotate(${((deg(P2x - P1x, P2y - P1y) - rest.head) * .6).toFixed(2)})`
+      d: `M${g.x.toFixed(2)} ${g.ground} Q${k.P1x.toFixed(2)} ${k.P1y} ${k.P2x.toFixed(2)} ${k.P2y.toFixed(2)}`,
+      leaf: `translate(${k.lx.toFixed(2)} ${k.ly.toFixed(2)}) rotate(${(k.leaf - rest.leaf).toFixed(2)})`,
+      head: `translate(${k.P2x.toFixed(2)} ${k.P2y.toFixed(2)}) rotate(${((k.head - rest.head) * .6 + g.tilt).toFixed(2)})`
     };
   };
   const still = matchMedia('(prefers-reduced-motion: reduce)');
@@ -263,18 +269,25 @@ try { applyTheme(localStorage.getItem('theme') || 'Default'); } catch (e) { appl
     }
     const prev = new Set([...box.querySelectorAll('.fl')].map(e => e.dataset.host));
     geo = [];
+    /* plants whose rows share a data-root grow from one spot halfway between their places */
+    const xs = vis.map((row, i) => pad + (W - 2*pad) * (n === 1 ? .5 : i / (n - 1)) + (stream(i)() - .5) * (W / n) * .35);
+    const roots = {};
+    vis.forEach((row, i) => { const k = row.dataset.root; if (k) (roots[k] = roots[k] || []).push(xs[i]); });
     const plants = vis.map((row, i) => {
       const f = PALETTE[i % PALETTE.length], T = window.THEME;
       const pc = T[13] ? T[13][i % T[13].length] : f.p, cc = T[14] ? T[14][i % 3 === 2 ? 1 : 0] : f.c;
       const rnd = stream(i);
-      const x = pad + (W - 2*pad) * (n === 1 ? .5 : i / (n - 1)) + (rnd() - .5) * (W / n) * .35;
+      rnd();
+      const k = row.dataset.root, base = k ? roots[k].reduce((a, b) => a + b, 0) / roots[k].length : xs[i];
+      const out = k ? (xs[i] < base ? -1 : 1) : 0;
+      const x = base, tx = k ? xs[i] + out * r * .5 * Math.min(1, Math.max(0, (W - 500) / 300)) : xs[i];
       const top = 30 + rnd() * (H * .28);
-      const bend = (rnd() - .5) * 18;
-      const ly = ground - (ground - top) * (.35 + rnd() * .25), side = i % 2 ? 1 : -1;
+      const bend = k ? (rnd(), 0) : (rnd() - .5) * 18;
+      const ly = ground - (ground - top) * (.35 + rnd() * .25), side = out || (i % 2 ? 1 : -1);
       const s = row.querySelector('.st').dataset.s || '';
       const cls = (row.hasAttribute('data-private') && s !== 'up' && s !== 'slow' ? ' closed' : '') + (s === 'down' && !row.hasAttribute('data-private') ? ' down' : '') + (drawn && !prev.has(row.dataset.host) ? ' fresh' : '');
       const name = row.querySelector('.name').textContent;
-      const g = {x, top, ground, bend, lt: (ground - ly) / (ground - top), L: ground - top,
+      const g = {x, tx, tilt: out * 14, top, ground, bend, lt: (ground - ly) / (ground - top), L: ground - top,
                  w: 2 * Math.PI / (3.8 + (i * .61) % 1.8), o: i * 1.37, o2: i * 2.11};
       geo.push(g);
       const st = stemAt(g, windDx(g, performance.now() / 1000));
