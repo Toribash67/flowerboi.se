@@ -161,10 +161,11 @@ try { applyTheme(localStorage.getItem('theme') || 'Default'); } catch (e) { appl
     <section>
       <h2>Projects</h2>
       <ul class="list" id="projects">
-        <li class="row" data-host="chat"><a class="name" href="https://chat.flowerboi.se">Flowerchat</a><span class="right"><a class="host" href="https://chat.flowerboi.se">chat.flowerboi.se</a><span class="st">…</span></span><span class="desc">Voice chat and screen sharing for a small group of friends.</span></li>
+        <li class="row" data-host="chat" data-repo="flowerchat"><a class="name" href="https://chat.flowerboi.se">Flowerchat</a><span class="right"><a class="host" href="https://chat.flowerboi.se">chat.flowerboi.se</a><span class="st">…</span></span><span class="desc">Voice chat and screen sharing for a small group of friends.</span></li>
         <li class="row" data-host="diplomacy" data-repo="diplomacy"><a class="name" href="https://diplomacy.flowerboi.se">Diplomacy</a><span class="right"><a class="host" href="https://diplomacy.flowerboi.se">diplomacy.flowerboi.se</a><span class="st">…</span></span><span class="desc">A digital implementation of the Diplomacy board game.</span></li>
         <li class="row" data-host="sengoku" data-repo="sengoku_jidai"><a class="name" href="https://sengoku.flowerboi.se">Sengoku Jidai</a><span class="right"><a class="host" href="https://sengoku.flowerboi.se">sengoku.flowerboi.se</a><span class="st">…</span></span><span class="desc">A digital implementation of General Orders: Sengoku Jidai.</span></li>
         <li class="row" data-host="map" data-repo="map-projections"><a class="name" href="https://map.flowerboi.se">Map projections</a><span class="right"><a class="host" href="https://map.flowerboi.se">map.flowerboi.se</a><span class="st">…</span></span><span class="desc">An interactive visualiser for map projections.</span></li>
+        <li class="row" data-host="@" data-repo="flowerboi.se"><a class="name" href="https://flowerboi.se">flowerboi.se</a><span class="right"><a class="host" href="https://flowerboi.se">flowerboi.se</a><span class="st">…</span></span><span class="desc">This page, with a flower for every site.</span></li>
       </ul>
     </section>
 
@@ -277,7 +278,7 @@ try { applyTheme(localStorage.getItem('theme') || 'Default'); } catch (e) { appl
                  w: 2 * Math.PI / (3.8 + (i * .61) % 1.8), o: i * 1.37, o2: i * 2.11};
       geo.push(g);
       const st = stemAt(g, windDx(g, performance.now() / 1000));
-      return `<a class="fl${cls}" data-host="${row.dataset.host}" href="https://${row.dataset.host}.flowerboi.se" style="--i:${i}"><title>${name}</title><g class="lift">
+      return `<a class="fl${cls}" data-host="${row.dataset.host}" href="${urlOf(row.dataset.host)}" style="--i:${i}"><title>${name}</title><g class="lift">
         <g class="stem"><path class="sl" d="${st.d}" fill="none" stroke="var(--stem)" stroke-width="${sw.toFixed(2)}" stroke-linecap="round"/>
         <path class="lf" d="M0 0 q${side*r*.9} ${-r*.2} ${side*r*1.3} ${-r*.9} q${-side*r*.8} ${-r*.05} ${-side*r*1.3} ${r*.9}Z" transform="${st.leaf}" fill="var(--leaf)"/></g>
         <g class="hd" transform="${st.head}"><g class="sway">
@@ -295,6 +296,7 @@ try { applyTheme(localStorage.getItem('theme') || 'Default'); } catch (e) { appl
     });
     drawn = true;
   };
+  const urlOf = h => h === '@' ? 'https://flowerboi.se/' : `https://${h}.flowerboi.se/`;
   const flower = h => box.querySelector(`.fl[data-host="${h}"]`);
   const hl = (h, on) => {
     flower(h)?.classList.toggle('on', on);
@@ -339,7 +341,7 @@ try { applyTheme(localStorage.getItem('theme') || 'Default'); } catch (e) { appl
     const t0 = performance.now();
     let ms = null;
     try {
-      await fetch(`https://${h}.flowerboi.se/`, {mode:'no-cors', cache:'no-store', credentials:'omit', signal:ctl.signal});
+      await fetch(urlOf(h), {mode:'no-cors', cache:'no-store', credentials:'omit', signal:ctl.signal});
       ms = Math.round(performance.now() - t0);
     } catch (e) {}
     clearTimeout(timer);
@@ -408,7 +410,7 @@ try { applyTheme(localStorage.getItem('theme') || 'Default'); } catch (e) { appl
       row.append(m);
     });
   };
-  const KEY = 'gh-repos';
+  const KEY = 'gh-repos-2';
   let cached = null;
   try { cached = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
   if (cached && Date.now() - cached.t < 36e5) showRepos(cached.list);
