@@ -71,9 +71,18 @@ h1{font-size:36px;line-height:1.05;letter-spacing:-.02em;font-weight:650;margin:
 .fl.opened .head{transform-box:fill-box;transform-origin:center;animation:bloom .8s cubic-bezier(.2,1.4,.4,1) both}
 .fl.fresh .head{transform-box:fill-box;transform-origin:center;animation:bloom .8s cubic-bezier(.2,1.4,.4,1) .42s both}
 .fl.fresh .stem{transform-box:fill-box;transform-origin:bottom;animation:grow .5s ease-out both}
+.wv{opacity:.15;animation:talk 2.6s ease-in-out infinite}
+.wv.b{animation-delay:.22s}
+@keyframes talk{0%,55%,100%{opacity:.15}22%{opacity:.9}}
+.glow{opacity:.7;animation:glow 4.5s ease-in-out infinite alternate}
+@keyframes glow{from{opacity:.4}to{opacity:1}}
+.fall{opacity:0;animation:fall 11s linear 5s infinite}
+@keyframes fall{0%{transform:translate(0,0) rotate(0);opacity:0}3%{opacity:1}20%{transform:translate(calc(var(--fx)*.75),calc(var(--fy)*.45)) rotate(150deg)}40%{transform:translate(var(--fx),var(--fy)) rotate(250deg);opacity:1}52%,100%{transform:translate(var(--fx),var(--fy)) rotate(250deg);opacity:0}}
+.anim .loose{animation:fadein .5s both;animation-delay:calc(var(--i)*70ms + 1100ms - var(--el,0ms))}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
 @keyframes bloom{from{transform:scale(0) rotate(-60deg)}to{transform:none}}
 @keyframes grow{from{transform:scaleY(0)}to{transform:none}}
-@media(prefers-reduced-motion:reduce){.anim .head,.anim .bud,.anim .stem,.fl.opened .head,.fl.fresh .head,.fl.fresh .stem{animation:none}.lift,.sway{transition:none}}
+@media(prefers-reduced-motion:reduce){.wv{animation:none;opacity:.55}.glow,.fall,.anim .loose{animation:none}.anim .head,.anim .bud,.anim .stem,.fl.opened .head,.fl.fresh .head,.fl.fresh .stem{animation:none}.lift,.sway{transition:none}}
 main{padding-block:28px 64px}
 section{margin-bottom:44px}
 h2{font-size:15px;font-weight:600;margin:0 0 4px}
@@ -212,6 +221,92 @@ try { applyTheme(localStorage.getItem('theme') || 'Default'); } catch (e) { appl
     }
     return out.join('');
   };
+
+  /* one small touch per site, keyed by data-host. Shapes and details hold in every theme; the signature colours
+     only show in Default (c.pal is the theme's flower colours, null in Default) */
+  const ring = (n, f, off = 0) => Array.from({length: n}, (_, j) => f(off + j * 360 / n, j)).join('');
+  const dot = (rad, fill) => `<circle r="${rad}" fill="${fill}"/>`;
+  const oval = (r, cy, rx, ry, a, fill) => `<ellipse cy="${-cy*r}" rx="${rx*r}" ry="${ry*r}" transform="rotate(${a})" fill="${fill}"/>`;
+  const pointed = (r, a, fill) => `<path d="M0 0 C${r*.5} ${-r*.35} ${r*.3} ${-r*.9} 0 ${-r} C${-r*.3} ${-r*.9} ${-r*.5} ${-r*.35} 0 0Z" transform="rotate(${a})" fill="${fill}"/>`;
+  /* spots are [x, y, radius] or [x, y, rx, ry] in units of the flower's radius */
+  const blood = (r, col, spots) => spots.map(([x, y, a, b]) => `<ellipse cx="${(x*r).toFixed(2)}" cy="${(y*r).toFixed(2)}" rx="${(a*r).toFixed(2)}" ry="${((b || a)*r).toFixed(2)}" fill="${col}"/>`).join('');
+  const SPECIES = {
+    /* voice chat: sound waves either side, pulsing like speech */
+    chat: c => {
+      const r = c.r, col = c.pal ? c.pc : '#8f6fe0';
+      const arc = (rho, s, cls) => { const x = Math.cos(.6) * rho * r, y = Math.sin(.6) * rho * r; return `<path class="wv ${cls}" d="M${(s*x).toFixed(2)} ${(-y).toFixed(2)} A${rho*r} ${rho*r} 0 0 ${s > 0 ? 1 : 0} ${(s*x).toFixed(2)} ${y.toFixed(2)}"/>`; };
+      return {col, head: ring(5, a => oval(r, .55, .42, .55, a, col)) + dot(r*.3, c.cc) +
+        `<g fill="none" stroke="${col}" stroke-width="${(r*.09).toFixed(2)}" stroke-linecap="round">${arc(1.28, 1, 'a')}${arc(1.56, 1, 'b')}${arc(1.28, -1, 'a')}${arc(1.56, -1, 'b')}</g>`};
+    },
+    /* seven petals in the seven great powers' colours, as the game assigns them */
+    diplomacy: c => {
+      const r = c.r, pw = c.pal || ['#e5383b', '#2f55d4', '#45c4e0', '#8a8a8a', '#5cc94a', '#2e8b3d', '#f2cc2e'];
+      return {col: pw[0], head: ring(7, (a, j) => oval(r, .56, .33, .5, a, pw[(j === 6 && pw.length < 7 ? 3 : j) % pw.length])) + dot(r*.27, c.pal ? c.cc : '#f4ead0')};
+    },
+    /* a cherry blossom with notched petals; one petal drifts off now and then */
+    sengoku: c => {
+      const r = c.r, g = c.g, col = c.pal ? c.pc : '#f7b3c8', deep = c.pal ? c.cc : '#d9487f';
+      const d = `M0 0 C${r*.5} ${-r*.22} ${r*.58} ${-r*.8} ${r*.2} ${-r} L0 ${-r*.8} L${-r*.2} ${-r} C${-r*.58} ${-r*.8} ${-r*.5} ${-r*.22} 0 0Z`;
+      return {col, head: ring(5, a => `<path d="${d}" transform="rotate(${a})" fill="${col}"/>`) + ring(5, a => `<circle cy="${-r*.4}" r="${r*.055}" transform="rotate(${a})" fill="${deep}"/>`) + dot(r*.15, deep),
+        loose: `<g transform="translate(${g.tx.toFixed(2)} ${g.top.toFixed(2)})"><ellipse class="fall" rx="${r*.2}" ry="${r*.3}" fill="${col}" style="--fx:${(r*3).toFixed(1)}px;--fy:${(g.ground - g.top - 3).toFixed(1)}px"/></g>`};
+    },
+    /* the centre is a little globe with its graticule */
+    map: c => {
+      const r = c.r, R = r * .5, col = c.pal ? c.pc : '#e6b566', sea = c.pal ? c.pal[(c.i + 2) % c.pal.length] : '#3f8fd0', h = R * .835;
+      return {col, head: ring(10, a => oval(r, .7, .17, .36, a, col)) + dot(R, sea) +
+        `<g fill="none" stroke="var(--bg)" stroke-width="${(r*.045).toFixed(2)}" stroke-opacity=".9"><path d="M${-R} 0H${R}M0 ${-R}V${R}M${-h} ${-R*.55}H${h}M${-h} ${R*.55}H${h}"/><ellipse rx="${R*.5}" ry="${R}"/></g>`};
+    },
+    /* this page: the flower from the site icon, a little larger than the rest */
+    '@': c => {
+      const R = c.r * 1.2;
+      return {col: 'var(--accent)', head: ring(5, a => oval(R, .5, .33, .5, a, 'var(--accent)')) + dot(R*.24, c.pal ? c.cc : '#f3c34a')};
+    },
+    /* Cataclysm: Bright Nights, pale and faintly glowing, with some blood on it */
+    cbn: c => {
+      const r = c.r, col = c.pal ? (c.T[14][0] !== c.T[2] ? c.T[14][0] : c.pc) : '#f6d667', red = c.pal ? c.T[12] : '#a3121f';
+      return {col, defs: `<radialGradient id="bn"><stop offset=".3" stop-color="${col}" stop-opacity=".75"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></radialGradient>`,
+        head: `<circle class="glow" r="${r*1.8}" fill="url(#bn)"/>` + ring(6, a => pointed(r, a, col)) + dot(r*.26, c.pal ? c.cc : '#fff6d6') +
+        blood(r, red, [[.45, -.3, .11], [.45, -.15, .03, .12], [.56, -.12, .045], [.3, -.44, .05], [-.02, .5, .09], [.08, .68, .04], [-.46, .24, .06], [-.28, -.2, .04]])};
+    },
+    /* Cataclysm: Dark Days Ahead, dark, bloodied, and one petal short (it lies on the ground) */
+    cdda: c => {
+      const r = c.r, g = c.g, col = c.pal ? `color-mix(in srgb, ${c.pc} 45%, #000)` : '#4b3745', red = c.pal ? c.T[12] : '#c4162a';
+      const px = g.tx + r * 1.15, py = g.ground - r * .1;
+      return {col, head: ring(5, (a, j) => j === 1 ? '' : oval(r, .55, .42, .55, a, col)) + dot(r*.3, c.pal ? `color-mix(in srgb, ${c.pc} 18%, #000)` : '#1d1418') +
+        blood(r, red, [[.05, -.6, .12], [.05, -.43, .03, .12], [-.12, -.42, .05], [.15, -.82, .045], [-.55, -.2, .1], [-.7, -.05, .045], [.3, .5, .07], [-.3, .52, .04]]),
+        loose: `<ellipse cx="${px.toFixed(2)}" cy="${py.toFixed(2)}" rx="${r*.42}" ry="${r*.17}" transform="rotate(-9 ${px.toFixed(2)} ${py.toFixed(2)})" fill="${col}"/>` + blood(1, red, [[px - r*.12, py - r*.02, r*.07, r*.05], [px - r*.75, g.ground - r*.02, r*.06, r*.03]])};
+    },
+    /* petals shade from purple to blue, the colours of the Jellyfin logo */
+    jellyfin: c => {
+      const r = c.r, a = c.pal ? c.pc : '#aa5cc3', b = c.pal ? c.pal[(c.i + 1) % c.pal.length] : '#00a4dc';
+      return {col: a, defs: `<linearGradient id="jf" x1="0" y1="1" x2="0" y2="0"><stop offset=".1" stop-color="${a}"/><stop offset=".9" stop-color="${b}"/></linearGradient>`,
+        head: ring(6, k => pointed(r, k, 'url(#jf)')) + dot(r*.22, c.pal ? c.cc : '#f4f0ff')};
+    },
+    /* square petals, like stacked containers */
+    dockge: c => {
+      const r = c.r, col = c.pal ? c.pc : '#2aa79b';
+      return {col, head: ring(4, a => `<rect x="${-r*.29}" y="${-r*.96}" width="${r*.58}" height="${r*.58}" rx="${r*.1}" transform="rotate(${a})" fill="${col}"/>`) +
+        `<rect x="${-r*.29}" y="${-r*.29}" width="${r*.58}" height="${r*.58}" rx="${r*.1}" fill="${c.pal ? `color-mix(in srgb, ${c.pc} 55%, var(--ink))` : '#8a4b22'}"/>`};
+    },
+    /* two offset rows of petals, like disk platters */
+    nas: c => {
+      const r = c.r, col = c.pal ? c.pc : '#1487c9', light = c.pal ? `color-mix(in srgb, ${c.pc} 55%, var(--bg))` : '#8fd0f2';
+      return {col, head: ring(8, a => oval(r, .62, .25, .4, a, col)) + ring(8, a => oval(r, .36, .2, .3, a, light), 22.5) + dot(r*.18, c.cc)};
+    },
+    /* arrow petals pointing outward, for forwarding */
+    npm: c => {
+      const r = c.r, col = c.pal ? c.pc : '#f15833';
+      const d = `M${-r*.085} ${-r*.2}V${-r*.62}H${-r*.25}L0 ${-r*1.02}L${r*.25} ${-r*.62}H${r*.085}V${-r*.2}Z`;
+      return {col, head: ring(6, a => `<path d="${d}" transform="rotate(${a})" fill="${col}" stroke="${col}" stroke-width="${(r*.05).toFixed(2)}" stroke-linejoin="round"/>`) + dot(r*.24, c.cc)};
+    },
+    /* a nodding flower whose petals point down, for downloading */
+    torrent: c => {
+      const r = c.r, col = c.pal ? c.pc : '#4c7de0', light = c.pal ? `color-mix(in srgb, ${c.pc} 70%, var(--bg))` : '#8fb0f0';
+      return {col, head: pointed(r, 116, light) + pointed(r, 244, light) + pointed(r, 148, col) + pointed(r, 212, col) + pointed(r, 180, col) +
+        `<ellipse cy="${-r*.02}" rx="${r*.36}" ry="${r*.27}" fill="var(--leaf)"/>`};
+    }
+  };
+  const plainFlower = c => ({col: c.pc, head: petals(c.k, c.r, c.pc) + dot(c.r*.3, c.cc)});
   const box = document.getElementById('meadow');
   /* each stem is a quadratic curve from its root; wind moves the tip sideways (dropping it a little so the
      stem keeps its length) and the control point less, so the stem bends rather than pivots */
@@ -269,6 +364,7 @@ try { applyTheme(localStorage.getItem('theme') || 'Default'); } catch (e) { appl
     }
     const prev = new Set([...box.querySelectorAll('.fl')].map(e => e.dataset.host));
     geo = [];
+    const defs = [];
     /* plants whose rows share a data-root grow from one spot halfway between their places */
     const xs = vis.map((row, i) => pad + (W - 2*pad) * (n === 1 ? .5 : i / (n - 1)) + (stream(i)() - .5) * (W / n) * .35);
     const roots = {};
@@ -280,28 +376,31 @@ try { applyTheme(localStorage.getItem('theme') || 'Default'); } catch (e) { appl
       rnd();
       const k = row.dataset.root, base = k ? roots[k].reduce((a, b) => a + b, 0) / roots[k].length : xs[i];
       const out = k ? (xs[i] < base ? -1 : 1) : 0;
-      const x = base, tx = k ? xs[i] + out * r * .5 * Math.min(1, Math.max(0, (W - 500) / 300)) : xs[i];
+      const x = base, tx = k ? base + (xs[i] - base) * .7 + out * r * .5 * Math.min(1, Math.max(0, (W - 500) / 300)) : xs[i];
       const top = 30 + rnd() * (H * .28);
       const bend = k ? (rnd(), 0) : (rnd() - .5) * 18;
       const ly = ground - (ground - top) * (.35 + rnd() * .25), side = out || (i % 2 ? 1 : -1);
       const s = row.querySelector('.st').dataset.s || '';
       const cls = (row.hasAttribute('data-private') && s !== 'up' && s !== 'slow' ? ' closed' : '') + (s === 'down' && !row.hasAttribute('data-private') ? ' down' : '') + (drawn && !prev.has(row.dataset.host) ? ' fresh' : '');
       const name = row.querySelector('.name').textContent;
-      const g = {x, tx, tilt: out * 14, top, ground, bend, lt: (ground - ly) / (ground - top), L: ground - top,
+      const g = {x, tx, tilt: out * 6, top, ground, bend, lt: (ground - ly) / (ground - top), L: ground - top,
                  w: 2 * Math.PI / (3.8 + (i * .61) % 1.8), o: i * 1.37, o2: i * 2.11};
       geo.push(g);
+      const sp = (SPECIES[row.dataset.host] || plainFlower)({r, pc, cc, pal: T[13] || null, T, i, k: f.k, g});
+      if (sp.defs) defs.push(sp.defs);
       const st = stemAt(g, windDx(g, performance.now() / 1000));
       return `<a class="fl${cls}" data-host="${row.dataset.host}" href="${urlOf(row.dataset.host)}" style="--i:${i}"><title>${name}</title><g class="lift">
         <g class="stem"><path class="sl" d="${st.d}" fill="none" stroke="var(--stem)" stroke-width="${sw.toFixed(2)}" stroke-linecap="round"/>
         <path class="lf" d="M0 0 q${side*r*.9} ${-r*.2} ${side*r*1.3} ${-r*.9} q${-side*r*.8} ${-r*.05} ${-side*r*1.3} ${r*.9}Z" transform="${st.leaf}" fill="var(--leaf)"/></g>
+        ${sp.loose ? `<g class="loose">${sp.loose}</g>` : ''}
         <g class="hd" transform="${st.head}"><g class="sway">
-          <g class="head">${petals(f.k, r, pc)}<circle r="${r*.3}" fill="${cc}"/></g>
-          <g class="bud"><path d="M0 ${r*.3} C${r*.55} ${r*.1} ${r*.45} ${-r*.6} 0 ${-r*.85} C${-r*.45} ${-r*.6} ${-r*.55} ${r*.1} 0 ${r*.3}Z" fill="var(--leaf)"/><path d="M0 ${-r*.85} C${r*.18} ${-r*.6} ${r*.15} ${-r*.35} 0 ${-r*.2} C${-r*.15} ${-r*.35} ${-r*.18} ${-r*.6} 0 ${-r*.85}Z" fill="${pc}"/></g>
+          <g class="head">${sp.head}</g>
+          <g class="bud"><path d="M0 ${r*.3} C${r*.55} ${r*.1} ${r*.45} ${-r*.6} 0 ${-r*.85} C${-r*.45} ${-r*.6} ${-r*.55} ${r*.1} 0 ${r*.3}Z" fill="var(--leaf)"/><path d="M0 ${-r*.85} C${r*.18} ${-r*.6} ${r*.15} ${-r*.35} 0 ${-r*.2} C${-r*.15} ${-r*.35} ${-r*.18} ${-r*.6} 0 ${-r*.85}Z" fill="${sp.col}"/></g>
         </g></g></g></a>`;
     }).join('');
     if (introStart === null) introStart = performance.now();
     const el = Math.round(performance.now() - introStart);
-    box.innerHTML = `<svg class="${el < INTRO ? 'anim' : ''}" style="--el:${el}ms"><g fill="var(--grass)">${grass}</g><line x1="0" x2="${W}" y1="${ground+2}" y2="${ground+2}" stroke="var(--rule)"/>${plants}</svg>`;
+    box.innerHTML = `<svg class="${el < INTRO ? 'anim' : ''}" style="--el:${el}ms"><defs>${defs.join('')}</defs><g fill="var(--grass)">${grass}</g><line x1="0" x2="${W}" y1="${ground+2}" y2="${ground+2}" stroke="var(--rule)"/>${plants}</svg>`;
     box.querySelectorAll('.fl').forEach((e, i) => {
       Object.assign(geo[i], {sl: e.querySelector('.sl'), lf: e.querySelector('.lf'), hd: e.querySelector('.hd')});
       e.addEventListener('mouseenter', () => hl(e.dataset.host, true));
