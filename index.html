@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>flowerboi.se</title>
+<meta name="description" content="Projects and services on flowerboi.se">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-12 -12 24 24'%3E%3Cg fill='%23c2417a'%3E%3Cellipse cy='-5.5' rx='3.6' ry='5.5'/%3E%3Cellipse cy='-5.5' rx='3.6' ry='5.5' transform='rotate(72)'/%3E%3Cellipse cy='-5.5' rx='3.6' ry='5.5' transform='rotate(144)'/%3E%3Cellipse cy='-5.5' rx='3.6' ry='5.5' transform='rotate(216)'/%3E%3Cellipse cy='-5.5' rx='3.6' ry='5.5' transform='rotate(288)'/%3E%3C/g%3E%3Ccircle r='2.6' fill='%23f3c34a'/%3E%3C/svg%3E">
+<style>
+/* VOICE everyday, quiet personal index with one playful picture
+   IDEA a small garden where every site on the domain is one plant
+   PICTURE a meadow strip: open flowers for public sites, buds for tailnet ones; down sites wilt, reachable buds open
+   COLOUR white / near-black, rose accent, flower colours only inside the meadow
+   TYPE system sans, monospace for hostnames
+   LAYOUT title block in a 640px column, meadow 960px wide under it, then the list; stacks under 520px */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#121113);--ink:light-dark(#1b1a1c,#ecebed);--muted:light-dark(#6b686e,#9d99a1);--rule:light-dark(#e8e6ea,#2a282c);--accent:light-dark(#c2417a,#f08cb5);--stem:light-dark(#4f8a52,#5fa865);--leaf:light-dark(#6aa86b,#4c8f52);--grass:light-dark(#7fb77d,#3f7a46);--up:light-dark(#2f9e5b,#4cc27a);--slow:light-dark(#d39a1c,#e8b34a);--down:light-dark(#d0463b,#ef6b5f);--off:light-dark(#b9b5bd,#5a565e)}
+:root[data-theme=light]{color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow-x:clip;-webkit-font-smoothing:antialiased}
+.wrap{padding-left:max(5vw,16px,env(safe-area-inset-left,0px));padding-right:max(5vw,16px,env(safe-area-inset-right,0px))}
+.col{max-width:640px;margin:0 auto}
+header{padding-top:clamp(32px,6vw,72px)}
+.top{position:relative;z-index:1;background:var(--bg)}
+.top::after{content:"";position:absolute;left:0;right:0;top:100%;height:56px;background:linear-gradient(var(--bg),color-mix(in srgb,var(--bg) 0%,transparent));pointer-events:none}
+@media(min-height:560px){.top{position:sticky;top:0}}
+a{color:inherit;text-decoration:none}
+h1{font-size:36px;line-height:1.05;letter-spacing:-.02em;font-weight:650;margin:0 0 10px}
+.intro{color:var(--muted);margin:0 0 16px}
+.links{display:flex;flex-wrap:wrap;gap:8px 20px;margin:0;padding:0;list-style:none;align-items:baseline}
+.tbtn{position:fixed;z-index:10;top:calc(env(safe-area-inset-top,0px) + 14px);right:calc(env(safe-area-inset-right,0px) + 14px);width:42px;height:42px;display:grid;place-items:center;color:var(--muted);background:var(--bg);border:1px solid var(--rule);border-radius:50%;cursor:pointer;padding:0}
+.tbtn:hover,.tbtn[aria-expanded=true]{color:var(--ink);border-color:var(--muted)}
+.tbtn svg{width:24px;height:24px}
+.chips{display:inline-flex}
+.chips i{width:12px;height:12px;border-radius:50%;border:1.5px solid var(--bg);margin-left:-4px}
+.chips i:first-child{margin-left:0}
+.tlayer{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:16px;background:rgb(0 0 0/.3)}
+.tlayer[hidden]{display:none}
+.tpop{width:min(440px,100%);max-height:min(600px,calc(100svh - 32px));overflow:auto;scrollbar-width:thin;scrollbar-color:var(--rule) transparent;background:var(--bg);border:1px solid var(--rule);border-radius:12px;box-shadow:0 12px 32px rgb(0 0 0/.18);padding:14px 10px 10px}
+.tpop h2{margin:0 8px 8px}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:2px}
+.topt{font:inherit;font-size:13.5px;text-align:left;color:var(--ink);background:none;border:0;border-radius:6px;padding:7px 8px;cursor:pointer;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.topt:hover,.topt:focus-visible{background:color-mix(in srgb,var(--accent) 10%,transparent);outline:none}
+.topt[aria-pressed=true]{box-shadow:inset 0 0 0 1.5px var(--accent)}
+.topt .chips i{border-color:transparent;box-shadow:0 0 0 1px rgb(127 127 127/.35)}
+.links a{color:var(--accent);border-bottom:1px solid color-mix(in srgb,var(--accent) 35%,transparent)}
+.links a:hover{border-bottom-color:var(--accent)}
+.meadow{max-width:960px;margin:8px auto 0;height:160px;position:relative}
+.meadow svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.fl{cursor:pointer}
+.fl:focus{outline:none}
+.lift{transition:transform .25s ease}
+.fl.on .lift,.fl:hover .lift,.fl:focus-visible .lift{transform:translateY(-8px)}
+.sway{transform-box:fill-box;transform-origin:center;transition:transform .4s ease}
+.fl:hover .sway{transform:rotate(14deg)}
+.fl.down .sway{transform:rotate(38deg) translateY(4px)}
+.fl.down .head{opacity:.4}
+.bud{display:none}
+.fl.closed .bud{display:inline}
+.fl.closed .head{display:none}
+.anim .head,.anim .bud{transform-box:fill-box;transform-origin:center;animation:bloom .8s cubic-bezier(.2,1.4,.4,1) both;animation-delay:calc(var(--i)*70ms + 420ms - var(--el,0ms))}
+.anim .stem{transform-box:fill-box;transform-origin:bottom;animation:grow .5s ease-out both;animation-delay:calc(var(--i)*70ms - var(--el,0ms))}
+.fl.opened .head{transform-box:fill-box;transform-origin:center;animation:bloom .8s cubic-bezier(.2,1.4,.4,1) both}
+.fl.fresh .head{transform-box:fill-box;transform-origin:center;animation:bloom .8s cubic-bezier(.2,1.4,.4,1) .42s both}
+.fl.fresh .stem{transform-box:fill-box;transform-origin:bottom;animation:grow .5s ease-out both}
+@keyframes bloom{from{transform:scale(0) rotate(-60deg)}to{transform:none}}
+@keyframes grow{from{transform:scaleY(0)}to{transform:none}}
+@media(prefers-reduced-motion:reduce){.anim .head,.anim .bud,.anim .stem,.fl.opened .head,.fl.fresh .head,.fl.fresh .stem{animation:none}.lift,.sway{transition:none}}
+main{padding-block:28px 64px}
+section{margin-bottom:44px}
+h2{font-size:15px;font-weight:600;margin:0 0 4px}
+.note{color:var(--muted);font-size:14px;margin:0 0 10px}
+ul.list{list-style:none;margin:0 -8px;padding:0;border-top:1px solid var(--rule)}
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 20px;align-items:baseline;padding:12px 8px;border-bottom:1px solid var(--rule);border-radius:4px;transition:background .15s}
+.row.on{background:color-mix(in srgb,var(--accent) 6%,transparent)}
+.name{font-weight:550}
+.name:hover,.host:hover,.meta a:hover{color:var(--accent)}
+.right{display:flex;align-items:baseline;gap:10px;justify-self:end;white-space:nowrap}
+.host{font:13.5px/1.4 ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;color:var(--muted)}
+.st{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;display:inline-flex;align-items:center;gap:6px}
+.st::after{content:"";width:8px;height:8px;border-radius:50%;border:1.5px solid var(--off);box-sizing:border-box}
+.st[data-s=up]::after{background:var(--up);border-color:var(--up)}
+.st[data-s=slow]::after{background:var(--slow);border-color:var(--slow)}
+.st[data-s=down]::after{background:var(--down);border-color:var(--down)}
+.st[data-s=off]::after{background:var(--off)}
+.desc{grid-column:1/-1;color:var(--muted);font-size:14.5px;line-height:1.45}
+.meta{grid-column:1/-1;font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:2px 14px}
+.meta a{border-bottom:1px solid var(--rule)}
+[hidden]{display:none!important}
+footer{color:var(--muted);font-size:13px}
+@media(max-width:520px){.row{grid-template-columns:minmax(0,1fr)}.right{justify-self:start}.meadow{height:125px}}
+</style>
+<script>
+/* colour themes: [name, scheme, bg, ink, muted, rule, accent, stem, leaf, grass, up, slow, down, flower colours, flower centres] */
+window.THEMES = [
+  ['Default', null],
+  ['Gruvbox Dark', 'dark', '#282828','#ebdbb2','#a89984','#3c3836','#fe8019', '#98971a','#b8bb26','#79740e', '#b8bb26','#fabd2f','#fb4934', ['#fb4934','#fabd2f','#83a598','#d3869b','#fe8019','#8ec07c'], ['#fabd2f','#282828']],
+  ['Gruvbox Light', 'light', '#fbf1c7','#3c3836','#7c6f64','#ebdbb2','#af3a03', '#79740e','#98971a','#98971a', '#79740e','#b57614','#9d0006', ['#cc241d','#d79921','#458588','#b16286','#d65d0e','#689d6a'], ['#d79921','#3c3836']],
+  ['One Half Dark', 'dark', '#282c34','#dcdfe4','#9da5b4','#3b4048','#61afef', '#98c379','#98c379','#6a8f55', '#98c379','#e5c07b','#e06c75', ['#e06c75','#e5c07b','#61afef','#c678dd','#56b6c2'], ['#e5c07b','#282c34']],
+  ['One Half Light', 'light', '#fafafa','#383a42','#696c77','#e5e5e6','#a626a4', '#50a14f','#50a14f','#7fbf7e', '#50a14f','#c18401','#e45649', ['#e45649','#c18401','#0184bc','#a626a4','#0997b3'], ['#c18401','#383a42']],
+  ['Monokai', 'dark', '#272822','#f8f8f2','#a59f85','#3e3d32','#f92672', '#a6e22e','#a6e22e','#6f9a1f', '#a6e22e','#e6db74','#f92672', ['#f92672','#fd971f','#e6db74','#66d9ef','#ae81ff'], ['#e6db74','#272822']],
+  ['Catppuccin Latte', 'light', '#eff1f5','#4c4f69','#6c6f85','#ccd0da','#8839ef', '#40a02b','#40a02b','#7cc26a', '#40a02b','#df8e1d','#d20f39', ['#d20f39','#fe640b','#df8e1d','#1e66f5','#ea76cb','#8839ef','#179299'], ['#df8e1d','#4c4f69']],
+  ['Catppuccin Frappé', 'dark', '#303446','#c6d0f5','#a5adce','#414559','#ca9ee6', '#a6d189','#a6d189','#6f8f5c', '#a6d189','#e5c890','#e78284', ['#e78284','#ef9f76','#e5c890','#8caaee','#f4b8e4','#ca9ee6','#81c8be'], ['#e5c890','#303446']],
+  ['Catppuccin Macchiato', 'dark', '#24273a','#cad3f5','#a5adcb','#363a4f','#c6a0f6', '#a6da95','#a6da95','#6c8f63', '#a6da95','#eed49f','#ed8796', ['#ed8796','#f5a97f','#eed49f','#8aadf4','#f5bde6','#c6a0f6','#8bd5ca'], ['#eed49f','#24273a']],
+  ['Catppuccin Mocha', 'dark', '#1e1e2e','#cdd6f4','#a6adc8','#313244','#cba6f7', '#a6e3a1','#a6e3a1','#6b9468', '#a6e3a1','#f9e2af','#f38ba8', ['#f38ba8','#fab387','#f9e2af','#89b4fa','#f5c2e7','#cba6f7','#94e2d5'], ['#f9e2af','#1e1e2e']],
+  ['Nord', 'dark', '#2e3440','#eceff4','#a3adbf','#3b4252','#88c0d0', '#a3be8c','#a3be8c','#6f8460', '#a3be8c','#ebcb8b','#bf616a', ['#bf616a','#d08770','#ebcb8b','#b48ead','#81a1c1','#88c0d0'], ['#ebcb8b','#2e3440']],
+  ['Dracula', 'dark', '#282a36','#f8f8f2','#a3a9c7','#44475a','#ff79c6', '#50fa7b','#50fa7b','#2f9e4e', '#50fa7b','#f1fa8c','#ff5555', ['#ff5555','#ffb86c','#f1fa8c','#bd93f9','#8be9fd','#ff79c6'], ['#f1fa8c','#282a36']],
+  ['Solarized Dark', 'dark', '#002b36','#eee8d5','#93a1a1','#073642','#268bd2', '#859900','#859900','#5c6b00', '#859900','#b58900','#dc322f', ['#dc322f','#cb4b16','#b58900','#d33682','#6c71c4','#268bd2','#2aa198'], ['#b58900','#002b36']],
+  ['Solarized Light', 'light', '#fdf6e3','#073642','#657b83','#eee8d5','#d33682', '#859900','#859900','#a8b83a', '#859900','#b58900','#dc322f', ['#dc322f','#cb4b16','#b58900','#d33682','#6c71c4','#268bd2','#2aa198'], ['#b58900','#073642']],
+  ['Tokyo Night', 'dark', '#1a1b26','#c0caf5','#9aa5ce','#292e42','#7aa2f7', '#9ece6a','#9ece6a','#5f7f3f', '#9ece6a','#e0af68','#f7768e', ['#f7768e','#ff9e64','#e0af68','#7dcfff','#bb9af7','#7aa2f7'], ['#e0af68','#1a1b26']],
+  ['Rosé Pine', 'dark', '#191724','#e0def4','#908caa','#26233a','#ebbcba', '#31748f','#31748f','#21506a', '#9ccfd8','#f6c177','#eb6f92', ['#eb6f92','#f6c177','#ebbcba','#c4a7e7','#9ccfd8'], ['#f6c177','#191724']],
+  ['Rosé Pine Dawn', 'light', '#faf4ed','#575279','#797593','#f2e9e1','#d7827e', '#286983','#286983','#56949f', '#286983','#ea9d34','#b4637a', ['#b4637a','#ea9d34','#d7827e','#907aa9','#56949f'], ['#ea9d34','#575279']],
+  ['Everforest', 'dark', '#2d353b','#d3c6aa','#9da9a0','#3d484d','#a7c080', '#a7c080','#83c092','#5a7a52', '#a7c080','#dbbc7f','#e67e80', ['#e67e80','#e69875','#dbbc7f','#7fbbb3','#d699b6'], ['#dbbc7f','#2d353b']],
+  ['Synthwave ’84', 'dark', '#262335','#ffffff','#bbb3d3','#34294f','#ff7edb', '#72f1b8','#72f1b8','#2a8f6a', '#72f1b8','#fede5d','#fe4450', ['#ff7edb','#fede5d','#36f9f6','#f97e72','#b893ce'], ['#fede5d','#262335']],
+  ['Game Boy', 'light', '#9bbc0f','#0f380f','#306230','#8bac0f','#0f380f', '#306230','#306230','#306230', '#0f380f','#306230','#0f380f', ['#306230','#0f380f','#8bac0f'], ['#9bbc0f','#0f380f']]
+];
+window.applyTheme = name => {
+  const t = THEMES.find(x => x[0] === name) || THEMES[0], st = document.documentElement.style;
+  const keys = ['--bg','--ink','--muted','--rule','--accent','--stem','--leaf','--grass','--up','--slow','--down','--off'];
+  keys.forEach(k => st.removeProperty(k));
+  st.removeProperty('color-scheme');
+  if (t[1]) {
+    st.setProperty('color-scheme', t[1]);
+    t.slice(2, 13).forEach((v, i) => st.setProperty(keys[i], v));
+    st.setProperty('--off', t[4]);
+  }
+  window.THEME = t;
+  return t;
+};
+try { applyTheme(localStorage.getItem('theme') || 'Default'); } catch (e) { applyTheme('Default'); }
+</script>
+</head>
+<body>
+<button type="button" class="tbtn" id="tbtn" aria-haspopup="dialog" aria-expanded="false" aria-label="Colour theme"></button>
+<div class="tlayer" id="tlayer" hidden><div class="tpop" role="dialog" aria-label="Colour theme"><h2>Colour theme</h2><div class="tgrid" id="tpop"></div></div></div>
+<div class="top">
+<header class="wrap">
+  <div class="col">
+    <h1>flowerboi</h1>
+    <p class="intro">Things I build and host.</p>
+    <ul class="links">
+      <li><a href="https://github.com/Toribash67">GitHub</a></li>
+    </ul>
+  </div>
+</header>
+
+<div class="wrap"><div class="meadow" id="meadow" aria-hidden="true"></div></div>
+</div>
+
+<main class="wrap">
+  <div class="col">
+    <section>
+      <h2>Projects</h2>
+      <ul class="list" id="projects">
+        <li class="row" data-host="chat"><a class="name" href="https://chat.flowerboi.se">Flowerchat</a><span class="right"><a class="host" href="https://chat.flowerboi.se">chat.flowerboi.se</a><span class="st">…</span></span><span class="desc">Voice chat and screen sharing for a small group of friends.</span></li>
+        <li class="row" data-host="diplomacy" data-repo="diplomacy"><a class="name" href="https://diplomacy.flowerboi.se">Diplomacy</a><span class="right"><a class="host" href="https://diplomacy.flowerboi.se">diplomacy.flowerboi.se</a><span class="st">…</span></span><span class="desc">A digital implementation of the Diplomacy board game.</span></li>
+        <li class="row" data-host="sengoku" data-repo="sengoku_jidai"><a class="name" href="https://sengoku.flowerboi.se">Sengoku Jidai</a><span class="right"><a class="host" href="https://sengoku.flowerboi.se">sengoku.flowerboi.se</a><span class="st">…</span></span><span class="desc">A digital implementation of General Orders: Sengoku Jidai.</span></li>
+        <li class="row" data-host="map" data-repo="map-projections"><a class="name" href="https://map.flowerboi.se">Map projections</a><span class="right"><a class="host" href="https://map.flowerboi.se">map.flowerboi.se</a><span class="st">…</span></span><span class="desc">An interactive visualiser for map projections.</span></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Hosted</h2>
+      <ul class="list" id="hosted">
+        <li class="row" data-host="cbn" data-repo="cbn-guide"><a class="name" href="https://cbn.flowerboi.se">Bright Nights guide</a><span class="right"><a class="host" href="https://cbn.flowerboi.se">cbn.flowerboi.se</a><span class="st">…</span></span><span class="desc">Item and crafting wiki for Cataclysm: Bright Nights.</span></li>
+        <li class="row" data-host="cdda" data-repo="cdda-guide"><a class="name" href="https://cdda.flowerboi.se">Dark Days Ahead guide</a><span class="right"><a class="host" href="https://cdda.flowerboi.se">cdda.flowerboi.se</a><span class="st">…</span></span><span class="desc">Item and crafting wiki for Cataclysm: Dark Days Ahead.</span></li>
+        <li class="row" data-host="jellyfin"><a class="name" href="https://jellyfin.flowerboi.se">Jellyfin</a><span class="right"><a class="host" href="https://jellyfin.flowerboi.se">jellyfin.flowerboi.se</a><span class="st">…</span></span><span class="desc">Media server.</span></li>
+      </ul>
+    </section>
+
+    <section id="private-section">
+      <h2>Private</h2>
+      <p class="note">Reachable over my tailnet only.</p>
+      <ul class="list" id="private">
+        <li class="row" data-host="dockge" data-private><a class="name" href="https://dockge.flowerboi.se">Dockge</a><span class="right"><a class="host" href="https://dockge.flowerboi.se">dockge.flowerboi.se</a><span class="st">…</span></span><span class="desc">Container stacks.</span></li>
+        <li class="row" data-host="nas" data-private><a class="name" href="https://nas.flowerboi.se">TrueNAS</a><span class="right"><a class="host" href="https://nas.flowerboi.se">nas.flowerboi.se</a><span class="st">…</span></span><span class="desc">Storage server.</span></li>
+        <li class="row" data-host="npm" data-private><a class="name" href="https://npm.flowerboi.se">Nginx Proxy Manager</a><span class="right"><a class="host" href="https://npm.flowerboi.se">npm.flowerboi.se</a><span class="st">…</span></span><span class="desc">Reverse proxy.</span></li>
+        <li class="row" data-host="torrent" data-private><a class="name" href="https://torrent.flowerboi.se">qBittorrent</a><span class="right"><a class="host" href="https://torrent.flowerboi.se">torrent.flowerboi.se</a><span class="st">…</span></span><span class="desc">Torrent client.</span></li>
+      </ul>
+    </section>
+
+    <footer>flowerboi.se · status is checked from your browser when the page loads</footer>
+  </div>
+</main>
+
+<script>
+{
+  const rows = [...document.querySelectorAll('.row')];
+  const PALETTE = [
+    {p:'#d9487f', c:'#f3c34a', k:0}, {p:'#f2b630', c:'#8a4b22', k:1}, {p:'#ef6a4a', c:'#f6d36b', k:2},
+    {p:'#9b7fd4', c:'#f3c34a', k:0}, {p:'#4f9bd9', c:'#fbe7a1', k:2}, {p:'#f4a6c0', c:'#c2417a', k:1},
+    {p:'#e8553f', c:'#2b1a14', k:0}, {p:'#d9487f', c:'#f3c34a', k:2}, {p:'#f2b630', c:'#8a4b22', k:0},
+    {p:'#9b7fd4', c:'#fbe7a1', k:1}, {p:'#ef6a4a', c:'#f6d36b', k:2}
+  ];
+  const petals = (k, r, fill) => {
+    const n = [5, 8, 6][k], out = [];
+    for (let i = 0; i < n; i++) {
+      const a = i * 360 / n;
+      if (k === 0) out.push(`<ellipse cy="${-r*.55}" rx="${r*.42}" ry="${r*.55}" transform="rotate(${a})" fill="${fill}"/>`);
+      else if (k === 1) out.push(`<ellipse cy="${-r*.6}" rx="${r*.2}" ry="${r*.55}" transform="rotate(${a})" fill="${fill}"/>`);
+      else out.push(`<path d="M0 0 C${r*.5} ${-r*.35} ${r*.3} ${-r*.9} 0 ${-r} C${-r*.3} ${-r*.9} ${-r*.5} ${-r*.35} 0 0Z" transform="rotate(${a})" fill="${fill}"/>`);
+    }
+    return out.join('');
+  };
+  const box = document.getElementById('meadow');
+  /* each stem is a quadratic curve from its root; wind moves the tip sideways (dropping it a little so the
+     stem keeps its length) and the control point less, so the stem bends rather than pivots */
+  let geo = [];
+  const deg = (dx, dy) => Math.atan2(dx, -dy) * 180 / Math.PI;
+  const stemAt = (g, dx) => {
+    const dy = dx * dx / (2 * g.L);
+    const P1x = g.x + g.bend + dx * .35, P1y = (g.ground + g.top) / 2;
+    const P2x = g.x + dx, P2y = g.top + dy;
+    const t = g.lt, u = 1 - t;
+    const lx = u*u*g.x + 2*u*t*P1x + t*t*P2x, ly = u*u*g.ground + 2*u*t*P1y + t*t*P2y;
+    const tan = (a, b) => deg(2*u*(P1x - g.x) + 2*t*(P2x - P1x), 2*u*(P1y - g.ground) + 2*t*(P2y - P1y));
+    const rest = g.rest || (g.rest = {leaf: deg(2*u*g.bend - 2*t*g.bend, (g.top - g.ground)), head: deg(-g.bend, (g.top - g.ground) / 2)});
+    return {
+      d: `M${g.x} ${g.ground} Q${P1x.toFixed(2)} ${P1y} ${P2x.toFixed(2)} ${P2y.toFixed(2)}`,
+      leaf: `translate(${lx.toFixed(2)} ${ly.toFixed(2)}) rotate(${(tan() - rest.leaf).toFixed(2)})`,
+      head: `translate(${P2x.toFixed(2)} ${P2y.toFixed(2)}) rotate(${((deg(P2x - P1x, P2y - P1y) - rest.head) * .6).toFixed(2)})`
+    };
+  };
+  const still = matchMedia('(prefers-reduced-motion: reduce)');
+  const breeze = now => {
+    const T = now / 1000;
+    if (!still.matches) for (const g of geo) {
+      if (!g.sl) continue;
+      const dx = g.L * .075 * (Math.sin(g.w * T + g.o) + .3 * Math.sin(2.3 * g.w * T + g.o2));
+      const st = stemAt(g, dx);
+      g.sl.setAttribute('d', st.d); g.lf.setAttribute('transform', st.leaf); g.hd.setAttribute('transform', st.head);
+    }
+    requestAnimationFrame(breeze);
+  };
+  requestAnimationFrame(breeze);
+  let drawn = false, introStart = null;
+  const INTRO = 2400;
+  const inIntro = () => introStart === null || performance.now() - introStart < INTRO;
+  const draw = () => {
+    const vis = rows.filter(r => !r.closest('section').hidden);
+    const W = box.clientWidth, H = box.clientHeight, n = vis.length;
+    const small = W < 520, r = small ? 13 : 20, pad = r + 8;
+    let seed = 7;
+    const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+    const ground = H - 14;
+    let grass = '';
+    for (let x = 4; x < W; x += small ? 9 : 12) {
+      const h = 6 + rnd() * 10, lean = (rnd() - .5) * 8;
+      grass += `<path d="M${x-2} ${ground+2} Q${x+lean*.4} ${ground-h*.6} ${x+lean} ${ground-h} Q${x+lean*.2} ${ground-h*.4} ${x+2} ${ground+2}Z"/>`;
+    }
+    const prev = new Set([...box.querySelectorAll('.fl')].map(e => e.dataset.host));
+    geo = [];
+    const plants = vis.map((row, i) => {
+      const f = PALETTE[i % PALETTE.length], T = window.THEME;
+      const pc = T[13] ? T[13][i % T[13].length] : f.p, cc = T[14] ? T[14][i % 3 === 2 ? 1 : 0] : f.c;
+      const x = pad + (W - 2*pad) * (n === 1 ? .5 : i / (n - 1)) + (rnd() - .5) * (W / n) * .35;
+      const top = 30 + rnd() * (H * .28);
+      const bend = (rnd() - .5) * 18;
+      const ly = ground - (ground - top) * (.35 + rnd() * .25), side = i % 2 ? 1 : -1;
+      const s = row.querySelector('.st').dataset.s || '';
+      const cls = (row.hasAttribute('data-private') && s !== 'up' && s !== 'slow' ? ' closed' : '') + (s === 'down' && !row.hasAttribute('data-private') ? ' down' : '') + (drawn && !prev.has(row.dataset.host) ? ' fresh' : '');
+      const name = row.querySelector('.name').textContent;
+      const g = {x, top, ground, bend, lt: (ground - ly) / (ground - top), L: ground - top,
+                 w: 2 * Math.PI / (3.8 + (i * .61) % 1.8), o: i * 1.37, o2: i * 2.11};
+      geo.push(g);
+      const st = stemAt(g, 0);
+      return `<a class="fl${cls}" data-host="${row.dataset.host}" href="https://${row.dataset.host}.flowerboi.se" style="--i:${i}"><title>${name}</title><g class="lift">
+        <g class="stem"><path class="sl" d="${st.d}" fill="none" stroke="var(--stem)" stroke-width="${small?2:2.5}" stroke-linecap="round"/>
+        <path class="lf" d="M0 0 q${side*r*.9} ${-r*.2} ${side*r*1.3} ${-r*.9} q${-side*r*.8} ${-r*.05} ${-side*r*1.3} ${r*.9}Z" transform="${st.leaf}" fill="var(--leaf)"/></g>
+        <g class="hd" transform="${st.head}"><g class="sway">
+          <g class="head">${petals(f.k, r, pc)}<circle r="${r*.3}" fill="${cc}"/></g>
+          <g class="bud"><path d="M0 ${r*.3} C${r*.55} ${r*.1} ${r*.45} ${-r*.6} 0 ${-r*.85} C${-r*.45} ${-r*.6} ${-r*.55} ${r*.1} 0 ${r*.3}Z" fill="var(--leaf)"/><path d="M0 ${-r*.85} C${r*.18} ${-r*.6} ${r*.15} ${-r*.35} 0 ${-r*.2} C${-r*.15} ${-r*.35} ${-r*.18} ${-r*.6} 0 ${-r*.85}Z" fill="${pc}"/></g>
+        </g></g></g></a>`;
+    }).join('');
+    if (introStart === null) introStart = performance.now();
+    const el = Math.round(performance.now() - introStart);
+    box.innerHTML = `<svg class="${el < INTRO ? 'anim' : ''}" style="--el:${el}ms"><g fill="var(--grass)">${grass}</g><line x1="0" x2="${W}" y1="${ground+2}" y2="${ground+2}" stroke="var(--rule)"/>${plants}</svg>`;
+    box.querySelectorAll('.fl').forEach((e, i) => {
+      Object.assign(geo[i], {sl: e.querySelector('.sl'), lf: e.querySelector('.lf'), hd: e.querySelector('.hd')});
+      e.addEventListener('mouseenter', () => hl(e.dataset.host, true));
+      e.addEventListener('mouseleave', () => hl(e.dataset.host, false));
+    });
+    drawn = true;
+  };
+  const flower = h => box.querySelector(`.fl[data-host="${h}"]`);
+  const hl = (h, on) => {
+    flower(h)?.classList.toggle('on', on);
+    document.querySelector(`.row[data-host="${h}"]`)?.classList.toggle('on', on);
+  };
+  rows.forEach(r => {
+    r.addEventListener('mouseenter', () => hl(r.dataset.host, true));
+    r.addEventListener('mouseleave', () => hl(r.dataset.host, false));
+  });
+  const meadowObs = new ResizeObserver(draw);
+  /* theme picker */
+  const tbtn = document.getElementById('tbtn'), tpop = document.getElementById('tpop'), tlayer = document.getElementById('tlayer');
+  const sw = t => t[1] ? [t[2], t[6], t[13][0], t[13][2]] : ['#ffffff', '#c2417a', '#d9487f', '#f2b630'];
+  const chips = t => sw(t).map(c => `<i style="background:${c}"></i>`).join('');
+  const setLabel = () => {
+    const c = sw(window.THEME);
+    tbtn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.3 0 2-.8 2-1.8 0-.5-.2-.9-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1 .8-1.8 1.8-1.8H17a4 4 0 0 0 4-4C21 6.4 17 3 12 3Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="7.5" cy="11" r="1.7" fill="${c[1]}"/><circle cx="10" cy="7" r="1.7" fill="${c[2]}"/><circle cx="15" cy="7.2" r="1.7" fill="${c[3]}"/></svg>`;
+    tbtn.title = 'Colour theme: ' + window.THEME[0];
+  };
+  tpop.innerHTML = THEMES.map(t => `<button type="button" class="topt" role="menuitemradio" data-t="${t[0]}"><span class="chips">${chips(t)}</span><span>${t[0]}</span></button>`).join('');
+  const mark = () => tpop.querySelectorAll('.topt').forEach(b => b.setAttribute('aria-pressed', b.dataset.t === window.THEME[0]));
+  const openPop = on => { tlayer.hidden = !on; tbtn.setAttribute('aria-expanded', on); if (on) { mark(); tpop.querySelector('[aria-pressed=true]')?.focus(); } };
+  tbtn.addEventListener('click', e => { e.stopPropagation(); openPop(tlayer.hidden); });
+  tpop.addEventListener('click', e => {
+    const b = e.target.closest('.topt');
+    if (!b) return;
+    applyTheme(b.dataset.t);
+    try { localStorage.setItem('theme', b.dataset.t); } catch (err) {}
+    setLabel(); mark();
+    if (drawn) draw();
+  });
+  tlayer.addEventListener('click', e => { if (e.target === tlayer) openPop(false); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !tlayer.hidden) { openPop(false); tbtn.focus(); } });
+  setLabel();
+
+
+  /* status: a no-cors request resolves (opaque) if the host answers at all, and rejects if it cannot be reached */
+  const check = async row => {
+    const h = row.dataset.host, st = row.querySelector('.st'), priv = row.hasAttribute('data-private');
+    st.dataset.s = ''; st.textContent = 'checking';
+    const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 6000);
+    const t0 = performance.now();
+    let ms = null;
+    try {
+      await fetch(`https://${h}.flowerboi.se/`, {mode:'no-cors', cache:'no-store', credentials:'omit', signal:ctl.signal});
+      ms = Math.round(performance.now() - t0);
+    } catch (e) {}
+    clearTimeout(timer);
+    const fl = flower(h);
+    if (ms !== null) {
+      st.dataset.s = ms > 800 ? 'slow' : 'up';
+      st.textContent = '';
+      st.title = 'Answered in ' + ms + ' ms';
+      if (priv && fl?.classList.contains('closed')) { fl.classList.remove('closed'); if (!inIntro()) fl.classList.add('opened'); }
+      fl?.classList.remove('down');
+    } else if (priv) {
+      st.dataset.s = 'down'; st.textContent = 'unreachable';
+      st.title = 'Not reachable from this network';
+    } else {
+      st.dataset.s = 'down'; st.textContent = 'down';
+      st.title = 'No answer within 6 s';
+      fl?.classList.add('down');
+    }
+  };
+  rows.filter(r => !r.hasAttribute('data-private')).forEach(check);
+
+  /* private hosts are checked too; off the tailnet they resolve to an address this browser cannot reach and show red */
+  rows.filter(r => r.hasAttribute('data-private')).forEach(check);
+  meadowObs.observe(box);
+
+  /* repo details: one unauthenticated call for all repos, cached for an hour */
+  const ago = iso => {
+    const d = (Date.now() - new Date(iso)) / 864e5;
+    if (d < 1) return 'updated today';
+    if (d < 2) return 'updated yesterday';
+    if (d < 45) return `updated ${Math.round(d)} days ago`;
+    if (d < 540) return `updated ${Math.round(d / 30.4)} months ago`;
+    return `updated ${Math.round(d / 365)} years ago`;
+  };
+  const showRepos = list => {
+    const by = new Map(list.map(r => [r.name, r]));
+    rows.filter(r => r.dataset.repo).forEach(row => {
+      const repo = by.get(row.dataset.repo);
+      if (!repo) return;
+      const m = document.createElement('span');
+      m.className = 'meta';
+      const bits = [repo.language, ago(repo.pushed_at), repo.stargazers_count ? '★ ' + repo.stargazers_count : null].filter(Boolean);
+      bits.forEach(b => { const s = document.createElement('span'); s.textContent = b; m.append(s); });
+      const a = document.createElement('a');
+      a.href = repo.html_url; a.textContent = repo.fork ? 'source (fork)' : 'source';
+      m.append(a);
+      row.append(m);
+    });
+  };
+  const KEY = 'gh-repos';
+  let cached = null;
+  try { cached = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
+  if (cached && Date.now() - cached.t < 36e5) showRepos(cached.list);
+  else fetch('https://api.github.com/users/Toribash67/repos?per_page=100')
+    .then(r => r.ok ? r.json() : Promise.reject(r.status))
+    .then(all => {
+      const list = all.map(r => ({name:r.name, language:r.language, pushed_at:r.pushed_at, stargazers_count:r.stargazers_count, html_url:r.html_url, fork:r.fork}));
+      try { localStorage.setItem(KEY, JSON.stringify({t:Date.now(), list})); } catch (e) {}
+      showRepos(list);
+    })
+    .catch(() => rows.filter(r => r.dataset.repo).forEach(row => {
+      const m = document.createElement('span'); m.className = 'meta';
+      const a = document.createElement('a'); a.href = 'https://github.com/Toribash67/' + row.dataset.repo; a.textContent = 'source';
+      m.append(a); row.append(m);
+    }));
+}
+</script>
+</body>
+</html>
