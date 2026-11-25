@@ -354,8 +354,18 @@ try { applyTheme(localStorage.getItem('theme') || 'Default'); } catch (e) { appl
   };
   rows.filter(r => !r.hasAttribute('data-private')).forEach(check);
 
-  /* private hosts are checked too; off the tailnet they resolve to an address this browser cannot reach and show red */
-  rows.filter(r => r.hasAttribute('data-private')).forEach(check);
+  /* private hosts resolve to a Tailscale (100.x) address, which browsers treat as a local network and ask the
+     visitor about; so they are only checked in browsers that opted in once by opening flowerboi.se/#tailnet */
+  let optedIn = false;
+  try {
+    if (location.hash === '#tailnet') { localStorage.setItem('tailnet-check', '1'); history.replaceState(null, '', location.pathname); }
+    optedIn = localStorage.getItem('tailnet-check') === '1';
+  } catch (e) {}
+  rows.filter(r => r.hasAttribute('data-private')).forEach(r => {
+    if (optedIn) return check(r);
+    const st = r.querySelector('.st');
+    st.dataset.s = 'off'; st.textContent = 'tailnet only'; st.title = 'Not checked from this browser';
+  });
   meadowObs.observe(box);
 
   /* repo details: one unauthenticated call for all repos, cached for an hour */
