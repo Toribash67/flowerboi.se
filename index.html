@@ -282,30 +282,18 @@ try { applyTheme(localStorage.getItem('theme') || 'Default'); } catch (e) { appl
       return {col: a, defs: `<linearGradient id="jf" x1="0" y1="1" x2="0" y2="0"><stop offset=".1" stop-color="${a}"/><stop offset=".9" stop-color="${b}"/></linearGradient>`,
         head: ring(6, k => pointed(r, k, 'url(#jf)')) + dot(r*.22, c.pal ? c.cc : '#f4f0ff')};
     },
-    /* square petals, like stacked containers */
-    dockge: c => {
-      const r = c.r, col = c.pal ? c.pc : '#2aa79b';
-      return {col, head: ring(4, a => `<rect x="${-r*.29}" y="${-r*.96}" width="${r*.58}" height="${r*.58}" rx="${r*.1}" transform="rotate(${a})" fill="${col}"/>`) +
-        `<rect x="${-r*.29}" y="${-r*.29}" width="${r*.58}" height="${r*.58}" rx="${r*.1}" fill="${c.pal ? `color-mix(in srgb, ${c.pc} 55%, var(--ink))` : '#8a4b22'}"/>`};
-    },
-    /* two offset rows of petals, like disk platters */
-    nas: c => {
-      const r = c.r, col = c.pal ? c.pc : '#1487c9', light = c.pal ? `color-mix(in srgb, ${c.pc} 55%, var(--bg))` : '#8fd0f2';
-      return {col, head: ring(8, a => oval(r, .62, .25, .4, a, col)) + ring(8, a => oval(r, .36, .2, .3, a, light), 22.5) + dot(r*.18, c.cc)};
-    },
-    /* arrow petals pointing outward, for forwarding */
-    npm: c => {
-      const r = c.r, col = c.pal ? c.pc : '#f15833';
-      const d = `M${-r*.085} ${-r*.2}V${-r*.62}H${-r*.25}L0 ${-r*1.02}L${r*.25} ${-r*.62}H${r*.085}V${-r*.2}Z`;
-      return {col, head: ring(6, a => `<path d="${d}" transform="rotate(${a})" fill="${col}" stroke="${col}" stroke-width="${(r*.05).toFixed(2)}" stroke-linejoin="round"/>`) + dot(r*.24, c.cc)};
-    },
-    /* a nodding flower whose petals point down, for downloading */
-    torrent: c => {
-      const r = c.r, col = c.pal ? c.pc : '#4c7de0', light = c.pal ? `color-mix(in srgb, ${c.pc} 70%, var(--bg))` : '#8fb0f0';
-      return {col, head: pointed(r, 116, light) + pointed(r, 244, light) + pointed(r, 148, col) + pointed(r, 212, col) + pointed(r, 180, col) +
-        `<ellipse cy="${-r*.02}" rx="${r*.36}" ry="${r*.27}" fill="var(--leaf)"/>`};
-    }
+    /* the private services wear their own icons (the files in icons/) as the heart of the flower,
+       ringed with petals in the icon's colours */
+    dockge: c => iconFlower(c, 'dockge.svg', 1.55, 0, ['#74c2ff', '#86e6a9'], 10, (r, a, col) => oval(r, .8, .27, .37, a, col)),
+    nas: c => iconFlower(c, 'truenas.svg', 1, [.68, 'var(--bg)'], ['#0095d5', '#71c7ec'], 10, (r, a, col) => oval(r, .8, .25, .36, a, col)),
+    npm: c => iconFlower(c, 'npm.png', 1.45, [.6, '#fff'], ['#f5c211', '#f47b20', '#e8352e', '#d6246e', '#8e3a9d', '#f15833'], 6, (r, a, col) => oval(r, .84, .33, .33, a, col), 30),
+    torrent: c => iconFlower(c, 'qbittorrent.svg', 1.3, 0, ['#72b4f5', '#356ebf'], 12, (r, a, col) => pointed(r * 1.16, a, col))
   };
+  function iconFlower(c, file, size, disc, cols, n, petal, off = 0) {
+    const r = c.r, pc = c.pal ? [c.pc] : cols, h = size * r / 2;
+    return {col: pc[0], head: ring(n, (a, j) => petal(r, a, pc[j % pc.length]), off) + (disc ? dot(r * disc[0], disc[1]) : '') +
+      `<image href="icons/${file}" x="${-h}" y="${-h}" width="${2*h}" height="${2*h}"/>`};
+  }
   const plainFlower = c => ({col: c.pc, head: petals(c.k, c.r, c.pc) + dot(c.r*.3, c.cc)});
   const box = document.getElementById('meadow');
   /* each stem is a quadratic curve from its root; wind moves the tip sideways (dropping it a little so the
