@@ -30,9 +30,15 @@ a{color:inherit;text-decoration:none}
 h1{font-size:36px;line-height:1.05;letter-spacing:-.02em;font-weight:650;margin:0 0 10px}
 .intro{color:var(--muted);margin:0 0 16px}
 .links{display:flex;flex-wrap:wrap;gap:8px 20px;margin:0;padding:0;list-style:none;align-items:baseline}
-.tbtn{position:fixed;z-index:10;top:calc(env(safe-area-inset-top,0px) + 14px);right:calc(env(safe-area-inset-right,0px) + 14px);width:42px;height:42px;display:grid;place-items:center;color:var(--muted);background:var(--bg);border:1px solid var(--rule);border-radius:50%;cursor:pointer;padding:0}
-.tbtn:hover,.tbtn[aria-expanded=true]{color:var(--ink);border-color:var(--muted)}
+.tbtn,.nbtn{position:fixed;z-index:10;top:calc(env(safe-area-inset-top,0px) + 14px);right:calc(env(safe-area-inset-right,0px) + 14px);width:42px;height:42px;display:grid;place-items:center;color:var(--muted);background:var(--bg);border:1px solid var(--rule);border-radius:50%;cursor:pointer;padding:0}
+.tbtn:hover,.tbtn[aria-expanded=true],.nbtn:hover{color:var(--ink);border-color:var(--muted)}
 .tbtn svg{width:24px;height:24px}
+.nbtn{top:calc(env(safe-area-inset-top,0px) + 66px)}
+.nbtn svg{width:20px;height:20px}
+.nbtn circle{fill:currentColor;opacity:.35}
+.nbtn circle.k{opacity:1}
+.nbtn[aria-pressed=true]{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 60%,transparent)}
+.nbtn[aria-pressed=true] circle{opacity:1}
 .chips{display:inline-flex}
 .chips i{width:12px;height:12px;border-radius:50%;border:1.5px solid var(--bg);margin-left:-4px}
 .chips i:first-child{margin-left:0}
@@ -134,6 +140,7 @@ try { applyTheme(localStorage.getItem('theme') || 'Default'); } catch (e) { appl
 </head>
 <body>
 <button type="button" class="tbtn" id="tbtn" aria-haspopup="dialog" aria-expanded="false" aria-label="Colour theme"></button>
+<button type="button" class="nbtn" id="nbtn" aria-pressed="false" aria-label="Check tailnet services from this browser"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="4" cy="4" r="2.1"/><circle cx="10" cy="4" r="2.1"/><circle cx="16" cy="4" r="2.1"/><circle class="k" cx="4" cy="10" r="2.1"/><circle class="k" cx="10" cy="10" r="2.1"/><circle class="k" cx="16" cy="10" r="2.1"/><circle cx="4" cy="16" r="2.1"/><circle class="k" cx="10" cy="16" r="2.1"/><circle cx="16" cy="16" r="2.1"/></svg></button>
 <div class="tlayer" id="tlayer" hidden><div class="tpop" role="dialog" aria-label="Colour theme"><h2>Colour theme</h2><div class="tgrid" id="tpop"></div></div></div>
 <div class="top">
 <header class="wrap">
@@ -356,16 +363,25 @@ try { applyTheme(localStorage.getItem('theme') || 'Default'); } catch (e) { appl
 
   /* private hosts resolve to a Tailscale (100.x) address, which browsers treat as a local network and ask the
      visitor about; so they are only checked in browsers that opted in once by opening flowerboi.se/#tailnet */
+  const nbtn = document.getElementById('nbtn');
+  const privRows = rows.filter(r => r.hasAttribute('data-private'));
+  const setTailnet = on => {
+    try { on ? localStorage.setItem('tailnet-check', '1') : localStorage.removeItem('tailnet-check'); } catch (e) {}
+    nbtn.setAttribute('aria-pressed', on);
+    nbtn.title = on ? 'Checking tailnet services from this browser (click to stop)' : 'Check tailnet services from this browser';
+    privRows.forEach(r => {
+      if (on) return check(r);
+      const st = r.querySelector('.st');
+      st.dataset.s = 'off'; st.textContent = 'tailnet only'; st.title = 'Not checked from this browser';
+      const fl = flower(r.dataset.host);
+      fl?.classList.remove('opened'); fl?.classList.add('closed');
+    });
+  };
   let optedIn = false;
-  try {
-    if (location.hash === '#tailnet') { localStorage.setItem('tailnet-check', '1'); history.replaceState(null, '', location.pathname); }
-    optedIn = localStorage.getItem('tailnet-check') === '1';
-  } catch (e) {}
-  rows.filter(r => r.hasAttribute('data-private')).forEach(r => {
-    if (optedIn) return check(r);
-    const st = r.querySelector('.st');
-    st.dataset.s = 'off'; st.textContent = 'tailnet only'; st.title = 'Not checked from this browser';
-  });
+  try { optedIn = localStorage.getItem('tailnet-check') === '1'; } catch (e) {}
+  if (location.hash === '#tailnet') { optedIn = true; history.replaceState(null, '', location.pathname); }
+  setTailnet(optedIn);
+  nbtn.addEventListener('click', () => setTailnet(nbtn.getAttribute('aria-pressed') !== 'true'));
   meadowObs.observe(box);
 
   /* repo details: one unauthenticated call for all repos, cached for an hour */
